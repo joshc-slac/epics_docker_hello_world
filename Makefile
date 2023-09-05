@@ -7,4 +7,4 @@ build:
 
 .PHONY: run
 run:
-	@docker run -it --rm epics_rhel_hello_world
+	@docker run -it --rm epics_rhel_hello_world || true
