@@ -13,3 +13,6 @@ RUN cd $HOME/EPICS/epics-base && EPICS_BASE=${HOME}/EPICS/epics-base EPICS_HOST_
 RUN echo "export EPICS_BASE=${HOME}/EPICS/epics-base" >> $HOME/.bashrc 
 RUN source $HOME/.bashrc && echo "export EPICS_HOST_ARCH=$(${EPICS_BASE}/startup/EpicsHostArch)" >> $HOME/.bashrc
 RUN source $HOME/.bashrc && echo "export PATH=${EPICS_BASE}/bin/${EPICS_HOST_ARCH}:${PATH}" >> $HOME/.bashrc
+
+# now for more SLAC stuff
+# RUN cd $HOME && git clone https://github.com/pcdshub/shared-dotfiles.git dotfiles
