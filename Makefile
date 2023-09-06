@@ -7,4 +7,4 @@ build:
 
 .PHONY: run
 run:
-	@docker run -it --rm epics_rhel_hello_world bash || true
+	@docker run -it --rm --hostname ctl-wtf-cam-03 epics_rhel_hello_world bash || true
