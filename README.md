@@ -12,7 +12,6 @@ You'll need `docker`, `make` is the recomended interface.
 
 
 ## TODOs
-- make more reflective of our actual stack.
-  - how do we source something like caget?
-  - should i just bring dot files in.... makes me not stoked
-- add convinient ways to test shell scripts (get them loaded into the docker image)
+
+## Dev Notes:
+If docker loses the ability to do DNS on your machine run: `sudo ip link delete docker0 && sudo systemctl restart docker`

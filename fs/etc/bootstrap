@@ -1,0 +1,113 @@
+#!/bin/bash
+if [ .${PSPKG_ROOT} == . ]; then
+    echo 'PSPKG_ROOT is not set'
+    exit 1
+fi
+if [ .${SLAC_USER} == . ]; then
+    export SLAC_USER="$USER"
+fi
+
+mkdir -p ${PSPKG_ROOT}/tarballs
+
+SLAC_PSPKG_ROOT=/reg/common/package
+SLAC_HOST=psexport.slac.stanford.edu
+
+# Was -azv but a (archive) is rlptgoD
+# r recursive
+# l symlinks
+# p permissions (NO because sticky bit copy doesn't work into AFS)
+# t times
+# g group (NO)
+# o owner (NO)
+# D devices & specials (NO)
+
+rsync_options="-rltzv --exclude=.git"
+
+rsync $rsync_options --exclude='*~' "$SLAC_USER@$SLAC_HOST:$SLAC_PSPKG_ROOT/etc" "${PSPKG_ROOT}"
+rsync $rsync_options --exclude='*~' "$SLAC_USER@$SLAC_HOST:$SLAC_PSPKG_ROOT/source/scripts" "${PSPKG_ROOT}/source"
+rsync $rsync_options --exclude='*~' "$SLAC_USER@$SLAC_HOST:$SLAC_PSPKG_ROOT/source/releases" "${PSPKG_ROOT}/source"
+rsync $rsync_options --exclude='*~' "$SLAC_USER@$SLAC_HOST:$SLAC_PSPKG_ROOT/source/pkg_info" "${PSPKG_ROOT}/source"
+chmod +x ${PSPKG_ROOT}/source/scripts/* ${PSPKG_ROOT}/etc/*
+
+if [ x$1 = x-n ]; then
+    echo Not checking prerequisites.
+    exit 0
+fi
+
+#
+# OK, check/install prerequisite packages.
+#
+rhel_pkgs="libXpm-devel bzip2-devel gcc gcc-c++ gcc-gfortran kernel-headers \
+           kernel-devel krb5-devel libX11-devel libXext-devel libXft-devel \
+           libXt-devel libxml2-devel libxslt-devel mysql-devel python-devel \
+           rpm-build unixODBC-devel zlib-devel"
+ubuntu_pkgs="binutils-gold bison build-essential cmake freeglut3 freeglut3-dev \
+            g++ gfortran gtk+-2.0 libXext-dev libbz2-dev libglew1.6-dev \
+            libglm-dev libglu1-mesa-dev libgtk-3-dev libmysqlclient-dev \
+            libpng++-dev libpng12-dev libreadline6-dev libssl-dev libx11-dev \
+            libxft-dev libxml2-dev libxpm-dev libxslt1-dev mesa-common-dev \
+            subversion uuid-dev zlib-bin zlib1g-dev"
+mint_pkgs="binutils-gold bison build-essential cmake freeglut3 freeglut3-dev \
+          g++ gfortran gtk+-2.0 libXext-dev libbz2-dev libglew-dev \
+          libglm-dev libglu1-mesa-dev libgtk-3-dev libpng++-dev libpng12-dev \
+          libreadline6-dev libssl-dev libtiff4-dev libx11-dev libxft-dev \
+          libxml2-dev libxpm-dev libxslt1-dev mesa-common-dev subversion \
+          uuid-dev zlib-bin zlib1g-dev"
+os=`${PSPKG_ROOT}/etc/pspkg_os.sh`
+# rhel5, rhel6, suse11, suse12, ubu??, mint??, sol8, sol9, sol10
+if [ ${os} == rhel5 -o ${os} == rhel6 ]; then
+    echo ""
+    echo Checking for prerequisite packages...
+    # Just run this to update the cache.  The rest, we'll run from cache.
+    yum search bash >/dev/null 2>&1
+    x=""
+    for pkg in $rhel_pkgs
+    do
+        yum -C list installed $pkg 2>/dev/null | grep installed
+	if [ $? == 1 ]; then x="$x $pkg"; fi
+    done
+    echo ""
+    if [ "x$x" == "x" ]; then
+	echo No needed packages.
+    else
+        echo Needed packages: $x
+        read -n 1 -p "Install needed packages now [y]? " -r
+        echo ""
+        REPLY=x${REPLY}
+        if [ $REPLY == 'x' -o $REPLY == 'xY' -o $REPLY == 'xy' ]; then
+	    sudo yum install -y $x
+        fi
+    fi
+elif [ ${os} == ubu12 -o ${os} == mint15 ]; then
+    echo ""
+    echo Checking for prerequisite packages...
+    if [ ${os} == ubu12 ]; then
+        pkgs=$ubuntu_pkgs
+    elif [ ${os} == mint15 ]; then
+        pkgs=$mint_pkgs
+    fi
+    x=""
+    for pkg in $pkgs
+    do
+        v=`apt-cache policy $pkg | awk '/Installed:/{print $2;exit}' -`
+	if [ $v == '(none)' ]; then
+	    x="$x $pkg";
+	else
+	    echo $pkg installed version $v
+	fi
+    done
+    echo ""
+    if [ "x$x" == "x" ]; then
+	echo No needed packages.
+    else
+        echo Needed packages: $x
+        read -n 1 -p "Install needed packages now [y]? " -r
+        echo ""
+        REPLY=x${REPLY}
+        if [ $REPLY == 'x' -o $REPLY == 'xY' -o $REPLY == 'xy' ]; then
+	    sudo apt-get install -y $x
+        fi
+    fi
+else
+    echo Unknown OS: ${os}
+fi

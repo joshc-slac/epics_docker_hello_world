@@ -24,6 +24,7 @@ RUN source $HOME/.bashrc && echo "export PATH=${EPICS_BASE}/bin/${EPICS_HOST_ARC
 ENV IOC_COMMON=/reg/d/iocCommon
 ENV T_A=rhel7-x86_64
 ENV PYPS_SITE_TOP=/reg/g/pcds/pyps
+ENV IOC_DATA=/reg/d/iocData
 #ioc.sh
 RUN mkdir -p /usr/lib/systemd/scripts
 COPY fs/ioc.sh /usr/lib/systemd/scripts
@@ -35,7 +36,7 @@ COPY fs/startup.cmd $IOC_COMMON/rhel7-x86_64/common/
 
 # build filepaths and populate files invoked by startup.cmd
 RUN mkdir -p /reg/g/pcds/pyps/config/ #location for common_dirs.sh
-COPY fs/common_dirs.sh /reg/g/pcds/pyps/config/
+COPY fs/common_dirs.sh fs/hosts.special /reg/g/pcds/pyps/config/
 RUN mkdir -p $IOC_COMMON/$T_A/common/ #location for kernel-modules.cmd
 COPY fs/kernel-modules.cmd fs/kernel-module-dirs.cmd $IOC_COMMON/$T_A/common/
 RUN mkdir -p $PYPS_SITE_TOP/apps/ioc/latest/ #location for initIOC
@@ -45,6 +46,7 @@ RUN cd $PYPS_SITE_TOP/apps/ioc/ && git clone https://github.com/pcdshub/IocManag
 # Start Spinning Hutch Up 
 ###############################################################################################
 #NOTE(josh): hostname is specified during call to docker run in Makefile
-RUN yum install -y hostname
-
+RUN yum install -y hostname pciutils
+RUN mkdir -p /reg/g/pcds/pkg_mgr/etc
+COPY fs/etc /reg/g/pcds/pkg_mgr/etc
 ###############################################################################################
