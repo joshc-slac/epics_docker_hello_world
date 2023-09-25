@@ -25,6 +25,10 @@ ENV IOC_COMMON=/reg/d/iocCommon
 ENV T_A=rhel7-x86_64
 ENV PYPS_SITE_TOP=/reg/g/pcds/pyps
 ENV IOC_DATA=/reg/d/iocData
+ENV HUTCH=wtf
+ENV PSPKG_ROOT=/reg/g/pcds/pkg_mgr
+
+
 #ioc.sh
 RUN mkdir -p /usr/lib/systemd/scripts
 COPY fs/ioc.sh /usr/lib/systemd/scripts
@@ -41,6 +45,8 @@ RUN mkdir -p $IOC_COMMON/$T_A/common/ #location for kernel-modules.cmd
 COPY fs/kernel-modules.cmd fs/kernel-module-dirs.cmd $IOC_COMMON/$T_A/common/
 RUN mkdir -p $PYPS_SITE_TOP/apps/ioc/latest/ #location for initIOC
 RUN cd $PYPS_SITE_TOP/apps/ioc/ && git clone https://github.com/pcdshub/IocManager.git latest
+# this is unfortunate but a legacy of the existing architecture.
+RUN cd $PYPS_SITE_TOP/apps/ && ln -s ioc iocmanager
 ###############################################################################################
 
 # Start Spinning Hutch Up 
@@ -49,4 +55,14 @@ RUN cd $PYPS_SITE_TOP/apps/ioc/ && git clone https://github.com/pcdshub/IocManag
 RUN yum install -y hostname pciutils
 RUN mkdir -p /reg/g/pcds/pkg_mgr/etc
 COPY fs/etc /reg/g/pcds/pkg_mgr/etc
+
+#somewhat silly symlink mechanism to control prod iocmanager releases per hutch. Here we point to latest, could be a "version" to
+RUN mkdir -p $PYPS_SITE_TOP/config/$HUTCH/ && cd $PYPS_SITE_TOP/config/$HUTCH/ && ln -s $PYPS_SITE_TOP/apps/iocmanager/latest iocmanager
+
+# this sucks hard but we're trying to reach parity with this existing system, in the future use any other pkg_mgr than one rolled from scratch plzx
+RUN mkdir -p $PSPKG_ROOT/release/controls-basic-0.0.1/x86_64-rhel7-gcc48-opt
+COPY fs/pkg_mgr $PSPKG_ROOT/release/controls-basic-0.0.1/x86_64-rhel7-gcc48-opt
+
+
+
 ###############################################################################################
