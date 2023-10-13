@@ -26,8 +26,8 @@ ENV T_A=rhel7-x86_64
 ENV PYPS_SITE_TOP=/reg/g/pcds/pyps
 ENV IOC_DATA=/reg/d/iocData
 ENV HUTCH=wtf
+ENV HUTCH_HOSTNAME=ctl-$HUTCH-cam-03
 ENV PSPKG_ROOT=/reg/g/pcds/pkg_mgr
-
 
 #ioc.sh
 RUN mkdir -p /usr/lib/systemd/scripts
@@ -59,10 +59,14 @@ COPY fs/etc /reg/g/pcds/pkg_mgr/etc
 #somewhat silly symlink mechanism to control prod iocmanager releases per hutch. Here we point to latest, could be a "version" to
 RUN mkdir -p $PYPS_SITE_TOP/config/$HUTCH/ && cd $PYPS_SITE_TOP/config/$HUTCH/ && ln -s $PYPS_SITE_TOP/apps/iocmanager/latest iocmanager
 
-# this sucks hard but we're trying to reach parity with this existing system, in the future use any other pkg_mgr than one rolled from scratch plzx
+# this sucks hard but we're trying to reach parity with this existing system, in the future use any other pkg_mgr than one rolled from scratch plz!
 RUN mkdir -p $PSPKG_ROOT/release/controls-basic-0.0.1/x86_64-rhel7-gcc48-opt
 COPY fs/pkg_mgr $PSPKG_ROOT/release/controls-basic-0.0.1/x86_64-rhel7-gcc48-opt
 
+# tragic mechanism for globally tracking 'os' per machine hostname, this is messy and problematicl initIOC.hutch:14 needs this file to exist
+RUN mkdir -p /reg/g/pcds/pyps/config/.host/ && cd /reg/g/pcds/pyps/config/.host/ && touch $HUTCH_HOSTNAME 
 
-
-###############################################################################################
+# another tough relic: this one sets up "environment" for soft IOCs to run. kill this with fire as well.
+RUN mkdir -p /reg/d/iocCommon/All
+COPY fs/hutch_env_scripts/ /reg/d/iocCommon/All   
+##############################################################################################
