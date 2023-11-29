@@ -1,13 +1,9 @@
 # base image set to track what most of our production machines seem to be running
-FROM registry.access.redhat.com/ubi7/ubi
-
-ENV container docker
+FROM rockylinux:9
 
 #Build SLAC EPICS Base
 ###############################################################################################
-RUN yum -y install git gcc make gcc-c++ ncurses-devel wget
-
-RUN wget http://mirror.centos.org/centos/7/os/x86_64/Packages/readline-devel-6.2-11.el7.x86_64.rpm && rpm -i readline-devel-6.2-11.el7.x86_64.rpm
+RUN yum -y install git gcc make gcc-c++ ncurses-devel wget perl
 
 RUN mkdir $HOME/EPICS && cd $HOME/EPICS && git clone https://github.com/slac-epics/epics-base
 RUN cd $HOME/EPICS/epics-base && EPICS_BASE=${HOME}/EPICS/epics-base EPICS_HOST_ARCH=$(${EPICS_BASE}/startup/EpicsHostArch) make
