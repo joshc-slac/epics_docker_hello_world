@@ -1,11 +1,11 @@
 # base image set to track what most of our production machines seem to be running
-FROM rockylinux:9
+FROM rockylinux:9.3
 
 #Build SLAC EPICS Base
 ###############################################################################################
-RUN yum -y install git gcc make gcc-c++ ncurses-devel wget perl
+RUN yum -y install git gcc make gcc-c++ ncurses-devel wget perl readline-devel
 
-RUN mkdir $HOME/EPICS && cd $HOME/EPICS && git clone https://github.com/slac-epics/epics-base
+RUN mkdir $HOME/EPICS && cd $HOME/EPICS && git clone https://github.com/joshc-slac/epics-base
 RUN cd $HOME/EPICS/epics-base && EPICS_BASE=${HOME}/EPICS/epics-base EPICS_HOST_ARCH=$(${EPICS_BASE}/startup/EpicsHostArch) make
 
 # configuring environment for epics ##TODO: there's probably a cleaner way...
